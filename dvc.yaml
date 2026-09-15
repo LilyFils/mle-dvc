@@ -1,5 +1,6 @@
 # dvc.yaml
 
+
 stages:
   get_data:
     cmd: python3 scripts/data.py
@@ -19,7 +20,8 @@ stages:
       - index_col
       - target_col
       - one_hot_drop
-      - auto_class_weights
+      - C
+      - penalty
     outs:
       - models/fitted_model.pkl
 

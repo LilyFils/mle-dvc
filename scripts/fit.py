@@ -5,9 +5,8 @@ import os
 import joblib
 import pandas as pd
 import yaml
-from catboost import CatBoostClassifier
-from category_encoders import CatBoostEncoder
 from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
@@ -19,29 +18,17 @@ def fit_model():
     data = pd.read_csv('data/initial_data.csv')
 
     cat_features = data.select_dtypes(include='object')
-    potential_binary_features = cat_features.nunique() == 2
-
-    binary_cat_features = cat_features[
-        potential_binary_features[potential_binary_features].index
-    ]
-
-    other_cat_features = cat_features[
-        potential_binary_features[~potential_binary_features].index
-    ]
-
     num_features = data.select_dtypes(include=['float'])
 
     preprocessor = ColumnTransformer(
         [
             (
-                'binary',
-                OneHotEncoder(drop=params['one_hot_drop']),
-                binary_cat_features.columns.tolist()
-            ),
-            (
                 'cat',
-                CatBoostEncoder(return_df=False),
-                other_cat_features.columns.tolist()
+                OneHotEncoder(
+                    drop=params['one_hot_drop'],
+                    handle_unknown='ignore'
+                ),
+                cat_features.columns.tolist()
             ),
             (
                 'num',
@@ -53,8 +40,9 @@ def fit_model():
         verbose_feature_names_out=False
     )
 
-    model = CatBoostClassifier(
-        auto_class_weights=params['auto_class_weights']
+    model = LogisticRegression(
+        C=params['C'],
+        penalty=params['penalty']
     )
 
     pipeline = Pipeline(
